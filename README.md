@@ -1,3 +1,5 @@
+#AI Saaskit
+
 🏗️ ARCHITECTURE OVERVIEW
 
 Framework: Next.js 15 (App Router)
