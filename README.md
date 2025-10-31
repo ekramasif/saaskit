@@ -1,193 +1,124 @@
-# Next.js 15 AI SaaS Starter Kit
+# AI Saaskit
 
-A production-ready SaaS starter kit built with Next.js 15, featuring authentication, subscription billing, AI integration, and RBAC.
+🏗️ ARCHITECTURE OVERVIEW
 
-## Features
+Framework: Next.js 15 (App Router)
+Language: TypeScript
+Database: PostgreSQL
+ORM: Prisma
+Auth: NextAuth (Google & GitHub)
+Payments: Stripe
+AI Models: OpenRouter API
+Styling: Tailwind CSS v4 + ShadCN UI + Framer Motion
+Structure: Monorepo (Turborepo recommended)
+Deployment: Fully serverless (Vercel + PostgreSQL on Neon)
 
-- **Next.js 15** with App Router and Server Actions
-- **TypeScript** for type safety
-- **Authentication** via NextAuth (Google & GitHub OAuth)
-- **Database** with PostgreSQL and Prisma ORM
-- **Role-Based Access Control (RBAC)** with granular permissions
-- **Stripe Integration** for subscription billing
-- **AI Chat** powered by OpenRouter API (GPT, Claude, Gemini, etc.)
-- **Credit System** for usage tracking
-- **Admin Dashboard** with analytics
-- **Blog System** for content management
-- **Tailwind CSS v4** + ShadCN UI components
-- **Dark/Light Mode** support
-- **Framer Motion** animations
+🔐 AUTHENTICATION & USER MANAGEMENT
 
-## Tech Stack
+NextAuth handles signup/sign-in (Google, GitHub)
+Session management handled via NextAuth middleware
+Middleware-based route protection (middleware.ts)
+User profile management (name, email, plan, credits, role, lastLogin)
+Roles: USER, ADMIN, SUPER_ADMIN
+`lastLogin` field updated on each login event
+Role and permission-based access handled at both DB and UI layers
+Admin can assign or update roles and permissions
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Auth**: NextAuth v5
-- **Payments**: Stripe
-- **AI**: OpenRouter API
-- **Styling**: Tailwind CSS v4, ShadCN UI
-- **Animations**: Framer Motion
+🧱 ROLE & PERMISSION SYSTEM (RBAC)
 
-## Getting Started
+Tables:
+Role → defines roles (Admin, Manager, User, etc.)
+Permission → defines feature access (e.g., “manage_users”, “edit_discount”, “view_analytics”)
+RolePermission → many-to-many relation between roles and permissions
+UserRole → maps users to one or more roles
 
-### Prerequisites
+Implementation:
+Controlled via Prisma models and RBAC middleware guards
+Admin dashboard UI for managing roles and permissions
+Middleware guard that checks user’s permissions before accessing pages/routes
 
-- Node.js 18+
-- PostgreSQL database
-- Stripe account
-- OpenRouter API key
-- OAuth credentials (Google & GitHub)
+Example permissions:
+manage_users (CRUD on users)
+manage_plans
+manage_discounts
+view_analytics
+manage_roles
+manage_blogs
+create_payments
 
-### Installation
+Super Admin:
+Full unrestricted access including:
 
-1. **Clone the repository**
+* User analytics and management
+* Role and permission assignment
+* Payment creation and discount management
+* Blog creation, editing, and publishing
 
-```bash
-git clone <your-repo-url>
-cd saaskit
-```
+Frontend:
+Hide or disable UI elements based on current user permissions
+Centralized hook usePermission() to check access rights
 
-2. **Install dependencies**
+💳 PAYMENT & BILLING (Stripe Integration)
 
-```bash
-npm install
-```
+Stripe subscriptions linked to PostgreSQL users
+Plans:
+Free → limited access
+Pro → 5 chats/month, 1 PDF upload per chat
+Business → unlimited chats and PDFs
+Monthly / Yearly billing (10% yearly discount)
+Discount code system with real-time validation
+Admin dashboard for editing plan limits, prices, and discounts
+Payment history and invoices stored in PostgreSQL via Prisma
+Stripe webhook at /api/webhooks/stripe
+Secure webhook verification
 
-3. **Set up environment variables**
+🤖 AI INTEGRATION (OpenRouter API)
 
-Copy `.env.example` to `.env` and fill in your credentials:
+AI chat system using OpenRouter models (GPT, Claude, Gemini, etc.)
+Streaming AI responses via Server Actions
+File upload & summarization (PDF to AI summary → downloadable PDF/CSV)
+Credit-based usage system stored in PostgreSQL (credits per user)
+Deduct credits per AI request based on plan
+Logs stored in Chat, Message, and File tables via Prisma
+Admin can monitor AI usage per user and model
 
-```bash
-cp .env.example .env
-```
+📊 ANALYTICS & DASHBOARD
 
-Required environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `NEXTAUTH_SECRET` - Generate with `openssl rand -base64 32`
-- `NEXTAUTH_URL` - Your app URL (http://localhost:3000 for dev)
-- `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
-- `GITHUB_ID` & `GITHUB_SECRET`
-- `STRIPE_SECRET_KEY` & `STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `OPENROUTER_API_KEY`
+User dashboard:
+Active chats, credits left, plan info
+Admin dashboard (RBAC protected):
+Revenue metrics (Stripe sync)
+Active users and plans
+AI usage analytics (per model, per plan)
+Role management section (assign roles, permissions)
+Super Admin dashboard for system-wide insights
+Charts using Recharts or Chart.js integrated with ShadCN UI
 
-4. **Set up the database**
+📰 BLOG SECTION
 
-```bash
-# Push the schema to your database
-npx prisma db push
+Super Admin and Admin can:
 
-# Seed initial data (roles, permissions, plans)
-npx prisma db seed
-```
+* Create, edit, publish, and delete blogs
+* Manage categories and tags
+* View engagement analytics per post
+  Blogs are stored in PostgreSQL with Prisma models (Blog, Category, Tag)
 
-5. **Run the development server**
+🎨 UI/UX
 
-```bash
-npm run dev
-```
+Tailwind CSS v4 + ShadCN UI components
+Framer Motion for transitions
+Dark/Light mode toggle
+Responsive dashboard layout
+Landing page with pricing, FAQ, and CTA
+Smooth navigation animations
 
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+🗄️ DATABASE & ORM (Prisma + PostgreSQL)
 
-## Database Schema
-
-The application includes comprehensive models for:
-
-- **Authentication**: User, Account, Session
-- **RBAC**: Role, Permission, RolePermission, UserRole
-- **Billing**: Plan, Subscription, Payment, DiscountCode
-- **AI**: Chat, Message, File, CreditUsage
-- **Content**: Blog, Category, Tag
-
-## User Roles
-
-- **USER**: Standard user with basic access
-- **ADMIN**: Administrator with elevated permissions
-- **SUPER_ADMIN**: Full system access
-
-## Permissions
-
-- `manage_users` - User management
-- `manage_plans` - Plan configuration
-- `manage_discounts` - Discount code management
-- `view_analytics` - Analytics access
-- `manage_roles` - Role and permission management
-- `manage_blogs` - Blog management
-- `create_payments` - Manual payment creation
-- `view_payments` - Payment history access
-
-## Stripe Setup
-
-1. Create products and prices in Stripe Dashboard
-2. Update `.env` with price IDs:
-   - `STRIPE_PRO_MONTHLY_PRICE_ID`
-   - `STRIPE_PRO_YEARLY_PRICE_ID`
-   - `STRIPE_BUSINESS_MONTHLY_PRICE_ID`
-   - `STRIPE_BUSINESS_YEARLY_PRICE_ID`
-
-3. Set up webhook endpoint: `/api/webhooks/stripe`
-4. Add webhook secret to `.env`
-
-## OpenRouter Setup
-
-1. Sign up at [OpenRouter](https://openrouter.ai)
-2. Generate an API key
-3. Add to `.env` as `OPENROUTER_API_KEY`
-
-## Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router pages
-│   ├── api/            # API routes
-│   ├── auth/           # Authentication pages
-│   ├── dashboard/      # User dashboard
-│   ├── admin/          # Admin dashboard
-│   └── ...
-├── components/         # React components
-│   ├── ui/            # ShadCN UI components
-│   └── ...
-├── lib/               # Utility libraries
-│   ├── auth.ts        # NextAuth configuration
-│   ├── prisma.ts      # Prisma client
-│   ├── stripe.ts      # Stripe integration
-│   ├── openrouter.ts  # AI integration
-│   ├── rbac.ts        # RBAC utilities
-│   └── ...
-├── actions/           # Server actions
-├── hooks/             # React hooks
-└── types/             # TypeScript types
-```
-
-## Deployment
-
-### Vercel
-
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add environment variables
-4. Deploy
-
-### Database
-
-Recommended: [Neon](https://neon.tech) for serverless PostgreSQL
-
-## Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npx prisma studio` - Open Prisma Studio
-- `npx prisma db push` - Push schema changes
-- `npx prisma db seed` - Seed database
-
-## License
-
-MIT
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
+Prisma ORM connected to PostgreSQL
+Schema includes:
+User, Role, Permission, RolePermission, UserRole
+Plan, Subscription, Payment, DiscountCode
+Chat, Message, File, CreditUsage
+Blog, Category, Tag
+Prisma migrations for schema updates
+Aggregated analytics queries via Prisma
