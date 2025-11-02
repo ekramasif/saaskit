@@ -27,5 +27,17 @@ export function SwaggerUIComponent() {
     );
   }
 
-  return <SwaggerUI spec={spec} />;
+  return (
+    <SwaggerUI
+      spec={spec}
+      docExpansion="full"
+      defaultModelsExpandDepth={3}
+      defaultModelExpandDepth={3}
+      displayRequestDuration={true}
+      filter={true}
+      showExtensions={true}
+      showCommonExtensions={true}
+      tryItOutEnabled={true}
+    />
+  );
 }
