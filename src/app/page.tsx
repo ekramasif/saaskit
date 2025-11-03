@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 export default async function Home() {
   // Fetch plans for pricing section
   const plans = await prisma.plan.findMany({
-    orderBy: { price: "asc" },
+    orderBy: { monthlyPrice: "asc" },
   });
 
   return (
@@ -280,7 +280,7 @@ export default async function Home() {
                   <div className="mb-6">
                     <div className="flex items-baseline gap-2">
                       <span className="text-5xl font-bold">
-                        ${plan.price.toFixed(0)}
+                        ${plan.monthlyPrice.toFixed(0)}
                       </span>
                       <span className="text-muted-foreground">/month</span>
                     </div>
