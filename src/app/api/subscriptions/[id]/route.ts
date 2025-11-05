@@ -217,6 +217,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Check if Stripe subscription ID exists
+    if (!subscription.stripeSubscriptionId) {
+      return NextResponse.json(
+        { error: "Stripe subscription ID not found" },
+        { status: 400 }
+      );
+    }
+
     // Cancel subscription in Stripe
     await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
       cancel_at_period_end: true,
