@@ -256,8 +256,18 @@ export async function POST(req: Request) {
     }
 
     console.error("Send promotional email error:", error);
+
+    // Return detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : "";
+
+    console.error("Error details:", { message: errorMessage, stack: errorStack });
+
     return NextResponse.json(
-      { error: "Failed to send promotional email. Please try again." },
+      {
+        error: "Failed to send promotional email. Please try again.",
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+      },
       { status: 500 }
     );
   }
@@ -308,8 +318,15 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     console.error("Get promotional emails error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error details:", { message: errorMessage });
+
     return NextResponse.json(
-      { error: "Failed to fetch promotional emails" },
+      {
+        error: "Failed to fetch promotional emails",
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+      },
       { status: 500 }
     );
   }
