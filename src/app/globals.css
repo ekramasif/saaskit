@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Optional: Import Outfit font from Google Fonts (with fallback to system fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -62,6 +65,7 @@
     border-color: hsl(var(--border));
   }
   body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
