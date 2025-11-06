@@ -17,10 +17,10 @@ export function AdminCharts({ revenueData, userGrowthData, subscriptionData }: A
       {/* Charts Section */}
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Revenue Over Time */}
-        <Card className="rounded-lg border border-gray-200 shadow-sm">
-          <CardHeader className="border-b border-gray-200">
-            <CardTitle className="text-lg font-semibold text-gray-900">Revenue Overview</CardTitle>
-            <CardDescription className="text-sm text-gray-600">Monthly revenue for the last 6 months</CardDescription>
+        <Card className="border-border">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-lg font-semibold text-foreground">Revenue Overview</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">Monthly revenue for the last 6 months</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
@@ -45,10 +45,10 @@ export function AdminCharts({ revenueData, userGrowthData, subscriptionData }: A
         </Card>
 
         {/* User Growth */}
-        <Card className="rounded-lg border border-gray-200 shadow-sm">
-          <CardHeader className="border-b border-gray-200">
-            <CardTitle className="text-lg font-semibold text-gray-900">User Growth</CardTitle>
-            <CardDescription className="text-sm text-gray-600">New user registrations by month</CardDescription>
+        <Card className="border-border">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-lg font-semibold text-foreground">User Growth</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">New user registrations by month</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
@@ -69,10 +69,10 @@ export function AdminCharts({ revenueData, userGrowthData, subscriptionData }: A
 
       {/* Subscription Distribution */}
       <div className="grid gap-5">
-        <Card className="rounded-lg border border-gray-200 shadow-sm">
-          <CardHeader className="border-b border-gray-200">
-            <CardTitle className="text-lg font-semibold text-gray-900">Subscription Distribution</CardTitle>
-            <CardDescription className="text-sm text-gray-600">Active subscriptions by plan</CardDescription>
+        <Card className="border-border">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-lg font-semibold text-foreground">Subscription Distribution</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">Active subscriptions by plan</CardDescription>
           </CardHeader>
           <CardContent className="pt-6 flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
