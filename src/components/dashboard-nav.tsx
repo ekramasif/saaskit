@@ -13,6 +13,12 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-permission";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const userNavItems = [
   {
@@ -58,53 +64,63 @@ const adminNavItems = [
 export function DashboardNav() {
   const pathname = usePathname();
   const isAdmin = useIsAdmin();
+  const isCollapsed = typeof document !== "undefined" &&
+    document.querySelector('[data-collapsed="true"]') !== null;
+
+  const NavLink = ({ item, isActive }: { item: typeof userNavItems[0]; isActive: boolean }) => {
+    const Icon = item.icon;
+    const linkContent = (
+      <Link
+        href={item.href}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-blue-600 text-white"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
+          isCollapsed && "justify-center"
+        )}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0" />
+        {!isCollapsed && <span>{item.title}</span>}
+      </Link>
+    );
+
+    if (isCollapsed) {
+      return (
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {linkContent}
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              {item.title}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return linkContent;
+  };
 
   return (
     <nav className="space-y-1">
       {userNavItems.map((item) => {
-        const Icon = item.icon;
         const isActive = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              isActive
-                ? "bg-blue-600 text-white"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-            )}
-          >
-            <Icon className="h-5 w-5" />
-            {item.title}
-          </Link>
-        );
+        return <NavLink key={item.href} item={item} isActive={isActive} />;
       })}
 
       {isAdmin && (
         <>
           <div className="my-3 border-t border-gray-200 dark:border-gray-800" />
-          <div className="px-3 py-2">
-            <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Admin</p>
-          </div>
+          {!isCollapsed && (
+            <div className="px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Admin</p>
+            </div>
+          )}
           {adminNavItems.map((item) => {
-            const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                {item.title}
-              </Link>
-            );
+            return <NavLink key={item.href} item={item} isActive={isActive} />;
           })}
         </>
       )}
