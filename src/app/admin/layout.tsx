@@ -44,11 +44,11 @@ export default async function AdminLayout({
   return (
     <SessionProvider session={session}>
       <div className="flex min-h-screen bg-gray-50">
-        {/* Dark Sidebar */}
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-gray-900">
+        {/* Light Sidebar */}
+        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200">
           {/* Logo & Back Button */}
-          <div className="flex h-16 items-center border-b border-gray-800 px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
+          <div className="flex h-16 items-center border-b border-gray-200 px-6">
+            <Link href="/dashboard" className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors">
               <Home className="h-5 w-5" />
               <span className="text-sm font-medium">Back to App</span>
             </Link>
@@ -65,7 +65,7 @@ export default async function AdminLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                 >
                   <Icon className="h-5 w-5" />
                   {item.label}

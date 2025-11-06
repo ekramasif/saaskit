@@ -20,17 +20,17 @@ export default async function DashboardLayout({
   return (
     <SessionProvider session={session}>
       <div className="flex min-h-screen bg-gray-50">
-        {/* Dark Sidebar */}
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-gray-900">
+        {/* Light Sidebar */}
+        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200">
           {/* Logo */}
-          <div className="flex h-16 items-center border-b border-gray-800 px-6">
+          <div className="flex h-16 items-center border-b border-gray-200 px-6">
             <Link href="/dashboard" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span className="text-lg font-bold text-white">AI SaaS</span>
+              <span className="text-lg font-bold text-gray-900">AI SaaS</span>
             </Link>
           </div>
 
