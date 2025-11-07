@@ -8,6 +8,36 @@ import { verifyEmailConfig, sendEmail } from "@/lib/email";
 export async function GET() {
   try {
     console.log("🧪 Testing SMTP configuration...");
+    console.log("🌍 Environment:", process.env.NODE_ENV);
+    console.log("📧 SMTP Host:", process.env.SMTP_HOST);
+    console.log("📧 SMTP User:", process.env.SMTP_USER);
+    console.log("📧 SMTP Port:", process.env.SMTP_PORT);
+
+    // Check if environment variables are set
+    const envCheck = {
+      SMTP_HOST: !!process.env.SMTP_HOST,
+      SMTP_USER: !!process.env.SMTP_USER,
+      SMTP_PASS: !!process.env.SMTP_PASS,
+      SMTP_PORT: !!process.env.SMTP_PORT,
+      ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
+    };
+
+    const missingVars = Object.entries(envCheck)
+      .filter(([, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing SMTP environment variables",
+          missing: missingVars,
+          hint: "Add these variables in Vercel → Settings → Environment Variables",
+          envCheck
+        },
+        { status: 500 }
+      );
+    }
 
     // First verify SMTP config
     const isConfigValid = await verifyEmailConfig();
@@ -16,7 +46,9 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          error: "SMTP configuration is invalid. Check your environment variables."
+          error: "SMTP configuration is invalid. Check your environment variables.",
+          envCheck,
+          hint: "Verify SMTP credentials are correct"
         },
         { status: 500 }
       );
@@ -43,15 +75,32 @@ export async function GET() {
     });
 
     if (!result.success) {
+      const errorDetails = result.error instanceof Error ? result.error.message : String(result.error);
+      console.error("❌ Test email failed:", errorDetails);
+
       return NextResponse.json(
         {
           success: false,
           error: "Failed to send test email",
-          details: result.error
+          details: errorDetails,
+          smtpConfig: {
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            user: process.env.SMTP_USER,
+          },
+          hint: errorDetails.includes("ECONNREFUSED")
+            ? "Cannot connect to SMTP server. Check host and port."
+            : errorDetails.includes("ETIMEDOUT")
+            ? "Connection timeout. Check network/firewall settings."
+            : errorDetails.includes("auth")
+            ? "Authentication failed. Check SMTP_USER and SMTP_PASS."
+            : "Check Vercel logs for more details"
         },
         { status: 500 }
       );
     }
+
+    console.log("✅ Test email sent successfully to:", testEmail);
 
     return NextResponse.json(
       {
@@ -59,15 +108,24 @@ export async function GET() {
         message: "Test email sent successfully!",
         sentTo: testEmail,
         messageId: result.messageId,
+        smtpConfig: {
+          host: process.env.SMTP_HOST,
+          port: process.env.SMTP_PORT,
+          user: process.env.SMTP_USER,
+        }
       },
       { status: 200 }
     );
   } catch (error: any) {
     console.error("Test email error:", error);
+    const errorMsg = error.message || String(error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to send test email"
+        error: errorMsg,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        hint: "Check console logs for detailed error information"
       },
       { status: 500 }
     );

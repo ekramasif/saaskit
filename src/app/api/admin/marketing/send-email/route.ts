@@ -83,6 +83,26 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if PromotionalEmail table exists before proceeding
+    try {
+      await prisma.promotionalEmail.findFirst({ take: 1 });
+    } catch (dbError: any) {
+      if (dbError.code === "P2021" || dbError.message?.includes("does not exist")) {
+        return NextResponse.json(
+          {
+            error: "Marketing email feature not set up",
+            message: "The promotional_emails table doesn't exist in your database.",
+            instructions: {
+              local: "Run: npx prisma generate && npx prisma db push",
+              vercel: "See VERCEL_DEPLOYMENT_FIX.md for instructions",
+              checkSetup: "Visit /api/admin/marketing/check-setup for diagnostics"
+            }
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     // Validate request body
     const body = await req.json();
     const validatedData = promotionalEmailSchema.parse(body);
@@ -186,14 +206,45 @@ export async function POST(req: Request) {
     // Send emails in batches (to avoid overwhelming the SMTP server)
     let successCount = 0;
     let failureCount = 0;
+    const failedEmails: Array<{ email: string; error: string }> = [];
     const batchSize = 10;
 
     console.log(`📧 Sending promotional email to ${recipients.length} recipients...`);
+    console.log(`📧 SMTP Config: Host=${process.env.SMTP_HOST}, User=${process.env.SMTP_USER}`);
+
+    // Check SMTP configuration before sending
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("❌ SMTP not configured properly");
+
+      // Update campaign status
+      await prisma.promotionalEmail.update({
+        where: { id: promotionalEmail.id },
+        data: {
+          status: "failed",
+          failureCount: recipients.length,
+          sentAt: new Date(),
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error: "SMTP not configured",
+          message: "Email server credentials are missing. Check Vercel environment variables.",
+          missing: {
+            SMTP_HOST: !process.env.SMTP_HOST,
+            SMTP_USER: !process.env.SMTP_USER,
+            SMTP_PASS: !process.env.SMTP_PASS,
+          },
+          instructions: "Go to Vercel → Settings → Environment Variables and add SMTP_HOST, SMTP_USER, SMTP_PASS"
+        },
+        { status: 500 }
+      );
+    }
 
     for (let i = 0; i < recipients.length; i += batchSize) {
       const batch = recipients.slice(i, i + batchSize);
 
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         batch.map(async (recipient) => {
           try {
             const result = await sendPromotionalEmail(
@@ -207,16 +258,75 @@ export async function POST(req: Request) {
             if (result.success) {
               successCount++;
               console.log(`✅ Email sent to ${recipient.email}`);
+
+              // Save recipient record with success status
+              try {
+                await prisma.emailRecipient.create({
+                  data: {
+                    promotionalEmailId: promotionalEmail.id,
+                    recipientEmail: recipient.email,
+                    recipientName: recipient.name,
+                    status: "sent",
+                    sentAt: new Date(),
+                  },
+                });
+              } catch (dbError) {
+                console.error(`Failed to save recipient record for ${recipient.email}:`, dbError);
+              }
+
+              return { success: true };
             } else {
               failureCount++;
-              console.error(`❌ Failed to send to ${recipient.email}:`, result.error);
+              const errorMsg = result.error instanceof Error ? result.error.message : String(result.error);
+              failedEmails.push({ email: recipient.email, error: errorMsg });
+              console.error(`❌ Failed to send to ${recipient.email}:`, errorMsg);
+
+              // Save recipient record with failure status
+              try {
+                await prisma.emailRecipient.create({
+                  data: {
+                    promotionalEmailId: promotionalEmail.id,
+                    recipientEmail: recipient.email,
+                    recipientName: recipient.name,
+                    status: "failed",
+                    errorMessage: errorMsg,
+                  },
+                });
+              } catch (dbError) {
+                console.error(`Failed to save recipient record for ${recipient.email}:`, dbError);
+              }
+
+              return { success: false, error: errorMsg };
             }
-          } catch (error) {
+          } catch (error: any) {
             failureCount++;
-            console.error(`❌ Error sending to ${recipient.email}:`, error);
+            const errorMsg = error.message || String(error);
+            failedEmails.push({ email: recipient.email, error: errorMsg });
+            console.error(`❌ Error sending to ${recipient.email}:`, errorMsg);
+
+            // Save recipient record with failure status
+            try {
+              await prisma.emailRecipient.create({
+                data: {
+                  promotionalEmailId: promotionalEmail.id,
+                  recipientEmail: recipient.email,
+                  recipientName: recipient.name,
+                  status: "failed",
+                  errorMessage: errorMsg,
+                },
+              });
+            } catch (dbError) {
+              console.error(`Failed to save recipient record for ${recipient.email}:`, dbError);
+            }
+
+            return { success: false, error: errorMsg };
           }
         })
       );
+
+      // Log batch results
+      const batchSuccess = results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length;
+      console.log(`📊 Batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(recipients.length / batchSize)}: ${batchSuccess}/${batch.length} sent`);
 
       // Small delay between batches to avoid rate limiting
       if (i + batchSize < recipients.length) {
@@ -237,13 +347,33 @@ export async function POST(req: Request) {
 
     console.log(`✅ Promotional email campaign completed: ${successCount} sent, ${failureCount} failed`);
 
+    // If all failed, return error
+    if (successCount === 0 && failureCount > 0) {
+      const firstError = failedEmails[0]?.error || "Unknown error";
+      return NextResponse.json(
+        {
+          error: "Failed to send emails",
+          message: `All ${failureCount} emails failed to send`,
+          details: firstError,
+          failedEmails: failedEmails.slice(0, 5), // Show first 5 failures
+          hint: failedEmails[0]?.error.includes("ECONNREFUSED") || failedEmails[0]?.error.includes("ETIMEDOUT")
+            ? "Check SMTP credentials and network connectivity"
+            : "Check Vercel logs for more details"
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       {
-        message: "Promotional email sent successfully",
+        message: successCount === recipients.length
+          ? "All emails sent successfully!"
+          : `${successCount}/${recipients.length} emails sent successfully`,
         campaignId: promotionalEmail.id,
         totalRecipients: recipients.length,
         successCount,
         failureCount,
+        failedEmails: failureCount > 0 ? failedEmails.slice(0, 10) : undefined,
       },
       { status: 200 }
     );
@@ -299,18 +429,39 @@ export async function GET(req: Request) {
     }
 
     // Get promotional emails with sender info
-    const promotionalEmails = await prisma.promotionalEmail.findMany({
-      include: {
-        sentByUser: {
-          select: {
-            name: true,
-            email: true,
+    let promotionalEmails;
+    try {
+      promotionalEmails = await prisma.promotionalEmail.findMany({
+        include: {
+          sentByUser: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+    } catch (dbError: any) {
+      if (dbError.code === "P2021" || dbError.message?.includes("does not exist")) {
+        // Table doesn't exist - return empty campaigns with setup instructions
+        return NextResponse.json(
+          {
+            campaigns: [],
+            setupRequired: true,
+            message: "Marketing email feature not set up yet",
+            instructions: {
+              local: "Run: npx prisma generate && npx prisma db push",
+              vercel: "See VERCEL_DEPLOYMENT_FIX.md",
+              checkSetup: "Visit /api/admin/marketing/check-setup"
+            }
+          },
+          { status: 200 }
+        );
+      }
+      throw dbError; // Re-throw if it's a different error
+    }
 
     return NextResponse.json(
       { campaigns: promotionalEmails },
