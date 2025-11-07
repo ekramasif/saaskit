@@ -58,7 +58,16 @@ export async function GET(
     }
 
     // Get all recipients for this campaign
-    let recipients;
+    let recipients: Array<{
+      id: string;
+      recipientEmail: string;
+      recipientName: string | null;
+      status: string;
+      errorMessage: string | null;
+      sentAt: Date | null;
+      createdAt: Date;
+    }> = [];
+
     try {
       recipients = await prisma.emailRecipient.findMany({
         where: { promotionalEmailId: campaignId },
