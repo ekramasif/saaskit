@@ -132,6 +132,17 @@
     }
   }
 
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient-shift 8s ease infinite;
@@ -164,6 +175,10 @@
     animation: scale-in 0.5s ease-out forwards;
   }
 
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s ease-out forwards;
+  }
+
   /* Glass morphism effect */
   .glass {
     background: rgba(255, 255, 255, 0.05);
@@ -182,5 +197,115 @@
   /* Smooth transitions */
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Grid background pattern */
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+}
+
+/* Professional Documentation Styles */
+@layer base {
+  /* Enhanced Typography for Documentation */
+  .docs-content {
+    @apply text-base leading-7;
+  }
+
+  .docs-content h1 {
+    @apply text-4xl lg:text-5xl font-bold tracking-tight mt-8 mb-4;
+  }
+
+  .docs-content h2 {
+    @apply text-3xl font-bold tracking-tight mt-12 mb-4 pb-2 border-b;
+  }
+
+  .docs-content h3 {
+    @apply text-2xl font-semibold tracking-tight mt-8 mb-3;
+  }
+
+  .docs-content h4 {
+    @apply text-xl font-semibold tracking-tight mt-6 mb-2;
+  }
+
+  .docs-content p {
+    @apply mb-4 leading-relaxed;
+  }
+
+  .docs-content ul, .docs-content ol {
+    @apply mb-4 ml-6 space-y-2;
+  }
+
+  .docs-content li {
+    @apply leading-relaxed;
+  }
+
+  .docs-content ul > li {
+    @apply list-disc;
+  }
+
+  .docs-content ol > li {
+    @apply list-decimal;
+  }
+
+  .docs-content a {
+    @apply text-primary hover:underline font-medium;
+  }
+
+  .docs-content code {
+    @apply px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-pink-600 dark:text-pink-400 font-mono text-sm border border-zinc-200 dark:border-zinc-700;
+  }
+
+  .docs-content pre code {
+    @apply p-0 bg-transparent border-0 text-inherit;
+  }
+
+  .docs-content blockquote {
+    @apply border-l-4 border-primary/30 pl-4 italic my-6 text-muted-foreground;
+  }
+
+  .docs-content table {
+    @apply w-full border-collapse my-6;
+  }
+
+  .docs-content th {
+    @apply bg-muted px-4 py-2 text-left font-semibold border;
+  }
+
+  .docs-content td {
+    @apply px-4 py-2 border;
+  }
+
+  .docs-content img {
+    @apply rounded-lg border shadow-lg my-6;
+  }
+
+  .docs-content hr {
+    @apply my-8 border-border;
+  }
+
+  /* Scrollbar Styling */
+  .docs-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .docs-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .docs-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-zinc-300 dark:bg-zinc-700 rounded-full;
+  }
+
+  .docs-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-400 dark:bg-zinc-600;
   }
 }
