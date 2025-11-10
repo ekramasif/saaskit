@@ -6,6 +6,7 @@ import {
   Rocket,
   Sparkles,
   Shield,
+  Zap,
   Bot,
   CreditCard,
   BarChart3,
@@ -28,6 +29,7 @@ import {
   Target,
   Lightbulb,
   Infinity,
+  X,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
