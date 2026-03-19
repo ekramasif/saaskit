@@ -222,10 +222,10 @@ export default function ClientComponent() {
 
       <h2>Protected Routes</h2>
 
-      <h3>Middleware Protection</h3>
-      <p>Protect routes using middleware (<code>middleware.ts</code>):</p>
+      <h3>Proxy Protection</h3>
+      <p>Protect routes using Next.js proxy (<code>proxy.ts</code>):</p>
       <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-        <code>{`export { auth as middleware } from "@/lib/auth";
+        <code>{`export { auth as proxy } from "@/lib/auth";
 
 export const config = {
   matcher: [

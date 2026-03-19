@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const publicRoutes = ["/", "/auth/signin", "/auth/error", "/pricing", "/blog"];
 const authRoutes = ["/auth/signin", "/auth/error"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if user has session token (JWT)
