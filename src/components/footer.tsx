@@ -18,13 +18,13 @@ export function Footer() {
                   AI SaaS Kit
                 </span>
                 <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#b6a896]">
-                  Editorial starter
+                  Next.js SaaS starter
                 </span>
               </div>
             </Link>
             <p className="mb-6 max-w-sm leading-relaxed text-[#c5b8a8]">
-              The complete Next.js starter kit for building AI-powered SaaS
-              products with a calmer, more premium surface.
+              A production-shaped Next.js starter for subscription software,
+              AI tools, client portals, and admin-heavy products.
             </p>
             <div className="flex gap-3">
               <Link
@@ -117,7 +117,7 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex flex-col items-center gap-6 md:flex-row">
             <p className="text-sm text-[#b7a995]">
-              © {year} AI SaaS Kit. All rights reserved.
+              Copyright {year} AI SaaS Kit. All rights reserved.
             </p>
             <div className="flex items-center gap-2 rounded-full border border-[#4d433b] bg-[#26211d] px-3 py-1.5">
               <div className="h-2 w-2 rounded-full bg-[#d7c7b7]" />

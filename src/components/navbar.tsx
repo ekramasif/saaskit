@@ -32,7 +32,7 @@ export function Navbar() {
         <nav
           className={`pointer-events-auto mx-auto transition-all duration-500 ${
             isScrolled
-              ? "max-w-6xl rounded-full border border-[#b8ab9c] bg-[#efe6dc]/95 backdrop-blur-xl shadow-[0_20px_45px_-30px_rgba(31,27,24,0.45)]"
+              ? "max-w-[90rem] rounded-full border border-[#b8ab9c] bg-[#efe6dc]/95 backdrop-blur-xl shadow-[0_20px_45px_-30px_rgba(31,27,24,0.45)]"
               : "border-b border-[#ccbfae] bg-[#E5DBCF]/88 backdrop-blur-xl"
           }`}
         >
@@ -48,7 +48,7 @@ export function Navbar() {
                   </span>
                   {!isScrolled && (
                     <span className="-mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#73685e]">
-                      Editorial starter
+                      Next.js SaaS starter
                     </span>
                   )}
                 </div>

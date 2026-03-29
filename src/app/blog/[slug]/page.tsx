@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Eye, User } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, isPrismaSetupError, prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,59 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 export async function generateStaticParams() {
-  const blogs = await prisma.blog.findMany({
-    where: { published: true },
-    select: { slug: true },
-  });
+  if (!isDatabaseConfigured) {
+    return [];
+  }
 
-  return blogs.map((blog: any) => ({
-    slug: blog.slug,
-  }));
+  try {
+    const blogs = await prisma.blog.findMany({
+      where: { published: true },
+      select: { slug: true },
+    });
+
+    return blogs.map((blog: any) => ({
+      slug: blog.slug,
+    }));
+  } catch (error) {
+    if (isPrismaSetupError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+function BlogUnavailablePage() {
+  return (
+    <div className="min-h-screen bg-[#E5DBCF] text-[#1f1b18]">
+      <Navbar />
+
+      <main className="pt-28">
+        <section className="pb-24 pt-6 md:pt-10">
+          <div className="container px-4 md:px-6">
+            <div className="mx-auto max-w-3xl rounded-[2.2rem] border border-[#b8ab9c] bg-[#efe6dc] p-8 text-center shadow-[0_30px_80px_-40px_rgba(31,27,24,0.45)] md:p-12">
+              <h1 className="font-display text-4xl leading-tight sm:text-5xl">
+                Blog content is unavailable until the database is configured.
+              </h1>
+              <p className="mt-5 text-lg leading-8 text-[#5a524a]">
+                Add `DATABASE_URL` to load published posts, author details, and view counts.
+              </p>
+              <div className="mt-8">
+                <Link href="/blog">
+                  <Button className="h-14 rounded-full bg-[#1f1b18] px-8 text-base font-semibold text-[#f3eadf] hover:bg-[#312a25]">
+                    Back to blog
+                    <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
 }
 
 export default async function BlogPostPage({
@@ -24,28 +69,47 @@ export default async function BlogPostPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  if (!isDatabaseConfigured) {
+    return <BlogUnavailablePage />;
+  }
 
-  const blog = await prisma.blog.findUnique({
-    where: { slug },
-    include: {
-      author: true,
-      categories: {
-        include: {
-          category: true,
+  const { slug } = await params;
+  let blog;
+
+  try {
+    blog = await prisma.blog.findUnique({
+      where: { slug },
+      include: {
+        author: true,
+        categories: {
+          include: {
+            category: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    if (isPrismaSetupError(error)) {
+      return <BlogUnavailablePage />;
+    }
+
+    throw error;
+  }
 
   if (!blog || !blog.published) {
     notFound();
   }
 
-  await prisma.blog.update({
-    where: { id: blog.id },
-    data: { views: { increment: 1 } },
-  });
+  try {
+    await prisma.blog.update({
+      where: { id: blog.id },
+      data: { views: { increment: 1 } },
+    });
+  } catch (error) {
+    if (!isPrismaSetupError(error)) {
+      throw error;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#E5DBCF] text-[#1f1b18]">

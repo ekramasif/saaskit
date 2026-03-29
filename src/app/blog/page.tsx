@@ -1,22 +1,35 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Calendar, User } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, isPrismaSetupError, prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 export default async function BlogPage() {
-  const blogs = await prisma.blog.findMany({
-    where: { published: true },
-    include: {
-      author: true,
-      categories: {
-        include: { category: true },
-      },
-    },
-    orderBy: { publishedAt: "desc" },
-  });
+  let blogs: any[] = [];
+  let databaseUnavailable = !isDatabaseConfigured;
+
+  if (!databaseUnavailable) {
+    try {
+      blogs = await prisma.blog.findMany({
+        where: { published: true },
+        include: {
+          author: true,
+          categories: {
+            include: { category: true },
+          },
+        },
+        orderBy: { publishedAt: "desc" },
+      });
+    } catch (error) {
+      if (!isPrismaSetupError(error)) {
+        throw error;
+      }
+
+      databaseUnavailable = true;
+    }
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#E5DBCF] text-[#1f1b18]">
@@ -125,10 +138,12 @@ export default async function BlogPage() {
               <div className="mx-auto max-w-2xl rounded-[2rem] border border-[#c7b8aa] bg-[#f4ede5] p-12 text-center">
                 <BookOpen className="mx-auto h-14 w-14 text-[#7a6f65]" />
                 <h2 className="mt-6 text-3xl font-semibold text-[#1f1b18]">
-                  No posts yet
+                  {databaseUnavailable ? "Blog is not connected yet" : "No posts yet"}
                 </h2>
                 <p className="mt-3 text-base leading-7 text-[#5a524a]">
-                  This section is ready for release notes, guides, and product updates.
+                  {databaseUnavailable
+                    ? "Set DATABASE_URL to enable published posts, author metadata, and category pages."
+                    : "This section is ready for release notes, guides, and product updates."}
                 </p>
               </div>
             )}
